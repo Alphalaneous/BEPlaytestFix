@@ -63,8 +63,6 @@ std::string getDllName(void* addr) {
 
 bool update = true;
 
-bool ignoreUpdateCheck = true;
-
 
 void(__thiscall* LevelEditorLayer_updateEditorMode)(gd::LevelEditorLayer*);
 
@@ -96,7 +94,6 @@ void __fastcall CCMenuItemToggler_toggle_H(gd::CCMenuItemToggler* self, void*, b
 
     if (name == "BetterEdit-v4.0.5.dll") {
         if (addr == 0x0034f4) {
-            std::cout << ignoreUpdateCheck << std::endl;
 
             update = false;
             gd::EditorUI* editorUI = gd::EditorUI::get();
@@ -117,11 +114,6 @@ void __fastcall CCMenuItemToggler_toggle_H(gd::CCMenuItemToggler* self, void*, b
 
 DWORD WINAPI thread_func(void* hModule) {
     MH_Initialize();
-
-    AllocConsole();
-    freopen("CONIN$", "r", stdin);
-    freopen("CONOUT$", "w", stdout);
-    freopen("CONOUT$", "w", stderr);
 
     std::random_device rd;
     std::mt19937 gen(rd());
