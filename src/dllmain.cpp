@@ -63,11 +63,24 @@ std::string getDllName(void* addr) {
 
 bool update = true;
 
+bool ignoreUpdateCheck = true;
+
+
 void(__thiscall* LevelEditorLayer_updateEditorMode)(gd::LevelEditorLayer*);
 
 void __fastcall LevelEditorLayer_updateEditorMode_H(gd::LevelEditorLayer* self, void*) {
 
     if (update) LevelEditorLayer_updateEditorMode(self);
+}
+
+void(__thiscall* LevelEditorLayer_init)(gd::LevelEditorLayer*, gd::GJGameLevel*);
+
+void __fastcall LevelEditorLayer_init_H(gd::LevelEditorLayer* self, void*, gd::GJGameLevel* level) {
+
+    LevelEditorLayer_init(self, level);
+
+    LevelEditorLayer_updateEditorMode(self);
+
 }
 
 
@@ -83,11 +96,14 @@ void __fastcall CCMenuItemToggler_toggle_H(gd::CCMenuItemToggler* self, void*, b
 
     if (name == "BetterEdit-v4.0.5.dll") {
         if (addr == 0x0034f4) {
+            std::cout << ignoreUpdateCheck << std::endl;
+
             update = false;
             gd::EditorUI* editorUI = gd::EditorUI::get();
             gd::LevelEditorLayer* editorLayer = gd::LevelEditorLayer::get();
-            if (editorUI) {
+            if (editorUI) { 
                 CCObject* obj{};
+                editorLayer->resetMovingObjects();
                 editorUI->onStopPlaytest(obj);
                 LevelEditorLayer_updateEditorMode(editorLayer);
             }
@@ -102,10 +118,10 @@ void __fastcall CCMenuItemToggler_toggle_H(gd::CCMenuItemToggler* self, void*, b
 DWORD WINAPI thread_func(void* hModule) {
     MH_Initialize();
 
-    /*AllocConsole();
+    AllocConsole();
     freopen("CONIN$", "r", stdin);
     freopen("CONOUT$", "w", stdout);
-    freopen("CONOUT$", "w", stderr);*/
+    freopen("CONOUT$", "w", stderr);
 
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -114,6 +130,12 @@ DWORD WINAPI thread_func(void* hModule) {
     int random = distr(gen);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(random));
+
+    MH_CreateHook(
+        reinterpret_cast<void*>(gd::base + 0x15ee00),
+        LevelEditorLayer_init_H,
+        reinterpret_cast<void**>(&LevelEditorLayer_init)
+    );
 
     MH_CreateHook(
         reinterpret_cast<void*>(gd::base + 0x1652b0),
